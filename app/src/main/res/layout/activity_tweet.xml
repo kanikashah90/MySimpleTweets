@@ -1,0 +1,76 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.codepath.apps.mysimpletweets.CreateTweet">
+
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:id="@+id/ivUserImage"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:background="#ff4be1ff"
+        android:layout_marginRight="10dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Text"
+        android:id="@+id/tvUserName"
+        android:layout_toRightOf="@+id/ivUserImage"
+        android:layout_toEndOf="@+id/ivUserImage"
+        android:layout_marginTop="5dp"
+        android:textColor="#ff050505" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Text"
+        android:id="@+id/tvScreenName"
+        android:layout_below="@+id/tvUserName"
+        android:layout_toRightOf="@+id/ivUserImage"
+        android:layout_toEndOf="@+id/ivUserImage" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_tweet_btn"
+        android:id="@+id/btn_send"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="5dp"
+        android:background="#ff62c5ff"
+        android:layout_marginLeft="20dp"
+        android:onClick="postTweet"/>
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/etText"
+        android:layout_below="@+id/btn_send"
+        android:layout_alignLeft="@+id/ivUserImage"
+        android:layout_alignStart="@+id/ivUserImage"
+        android:layout_alignRight="@+id/btn_send"
+        android:layout_alignEnd="@+id/btn_send"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="10dp"
+        android:hint="What&apos;s happening?"
+        android:gravity="top" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_char_count"
+        android:id="@+id/tvCharCount"
+        android:layout_alignTop="@+id/btn_send"
+        android:layout_toLeftOf="@+id/btn_send"
+        android:layout_toStartOf="@+id/btn_send"
+        android:layout_marginTop="15dp"
+        android:textColor="#ffbbbbbb" />
+</RelativeLayout>
