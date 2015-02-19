@@ -113,6 +113,16 @@ public class Tweet {
     public User user;
     public String creationTime;
     public ArrayList<TwitterUrl> urls;
+    public int reTweetCount;
+    public int favouritesCount;
+
+    public int getReTweetCount() {
+        return reTweetCount;
+    }
+
+    public int getFavouritesCount() {
+        return favouritesCount;
+    }
 
     public String getCreated_at() {
         return created_at;
@@ -148,6 +158,8 @@ public class Tweet {
             tweet.user = User.fromJson(jsonObject.getJSONObject("user"));
             tweet.urls = TwitterUrl.urlsFromJsonArray(jsonObject.getJSONObject("entities").getJSONArray("urls"));
             tweet.creationTime = tweet.getRelativeTimeAgo(jsonObject.getString("created_at"));
+            tweet.reTweetCount = jsonObject.getInt("retweet_count");
+            tweet.favouritesCount = jsonObject.getInt("favorite_count");
             String urlEmbeddedtext = tweet.createText(tweet.getText(), tweet.getUrls());
             if(!urlEmbeddedtext.isEmpty()) {
                 tweet.text = urlEmbeddedtext;

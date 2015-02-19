@@ -1,38 +1,48 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_height="match_parent"
     android:descendantFocusability="beforeDescendants"
     android:focusableInTouchMode="true"
     tools:context="com.codepath.apps.mysimpletweets.TimelineActivity">
 
-    <android.support.v4.widget.SwipeRefreshLayout
+    <android.support.v7.widget.Toolbar
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/swipeContainer"
+        android:id="@+id/toolbar"
+        android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:minHeight="?attr/actionBarSize"
+        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:background="@color/twitter_color">
 
-        <ListView
+        <ProgressBar
+            android:id="@+id/progress_bar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/lvTweets"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true" />
-    </android.support.v4.widget.SwipeRefreshLayout>
+            android:layout_gravity="right"
+            android:indeterminate="true"
+            android:visibility="visible"/>
 
-    <EditText
-        android:layout_width="wrap_content"
+    </android.support.v7.widget.Toolbar>
+
+    <com.astuetz.PagerSlidingTabStrip
+        android:id="@+id/tabs"
+        app:pstsShouldExpand="true"
+        app:pstsTextAllCaps="true"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_below="@id/toolbar"
+        android:background="@android:color/white"
+        app:pstsDividerColor="@android:color/white"
+        app:pstsIndicatorColor="@color/twitter_color"
+        >
+    </com.astuetz.PagerSlidingTabStrip>
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewpager"
+        android:layout_below="@id/tabs"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/etTweet"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:singleLine="false"
-        android:hint="What&apos;s happening?"
-        android:textColor="#ffa7a7a7"
-        android:background="#ffffffff" />
+        android:background="@android:color/white"
+        android:layout_alignParentBottom="true" />
 </RelativeLayout>

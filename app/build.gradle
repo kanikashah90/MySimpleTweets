@@ -24,4 +24,5 @@ dependencies {
     compile 'com.squareup.picasso:picasso:2.4.0'
     compile 'com.loopj.android:android-async-http:1.4.6'
     compile files('libs/activeandroid-3.0 (1).jar')
+    compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
 }

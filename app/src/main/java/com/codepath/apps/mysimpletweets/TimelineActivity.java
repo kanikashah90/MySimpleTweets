@@ -1,136 +1,77 @@
 package com.codepath.apps.mysimpletweets;
 
 import android.content.Intent;
-import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.ListView;
+import android.view.Window;
+import android.widget.ProgressBar;
 
-import com.codepath.apps.mysimpletweets.models.Tweet;
+import com.astuetz.PagerSlidingTabStrip;
+import com.codepath.apps.mysimpletweets.fragments.HomeTimeLineFragment;
+import com.codepath.apps.mysimpletweets.fragments.MentionTimeLineFragment;
+import com.codepath.apps.mysimpletweets.fragments.ProfileFragment;
+import com.codepath.apps.mysimpletweets.fragments.TweetListFragment;
+import com.codepath.apps.mysimpletweets.fragments.createTweetDialog;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.apache.http.Header;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-
-import com.codepath.apps.mysimpletweets.adapters.TweetsArrayAdapter;
-
-public class TimelineActivity extends ActionBarActivity {
-
+public class TimelineActivity extends ActionBarActivity implements TweetListFragment.OnScreenActivityListener {
+    private HomeTimeLineFragment homeTimelineFragment;
+    private MentionTimeLineFragment mentionTimeLineFragment;
+    private ViewPager vpPager;
+    private PagerSlidingTabStrip tabs;
+    private String screenName;
+    private String tag;
+    private String imageUrl;
+    private int followers;
+    private int following;
     private TwitterClient client;
-    private ListView lvTweets;
-    private ArrayList<Tweet> tweets;
-    private ArrayAdapter<Tweet> atweets;
-    private long maxIdVal;
-    private boolean isPagination;
-    private EditText writeTweet;
-    private String userName;
-    private String userScreenName;
-    private String userImageUrl;
-    private SwipeRefreshLayout swipeContainer;
+    private TweetPageAdapter tpAdapter;
+    private Toolbar toolbar;
+    private ProgressBar progress_bar;
+    private long tweetId;
+    private String originUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timeline);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        //findViewById(R.id.lvTweets).requestFocus();
-        maxIdVal = 0;
-        isPagination = false;
-        lvTweets = (ListView) findViewById(R.id.lvTweets);
-        tweets = new ArrayList<Tweet>();
-        atweets = new TweetsArrayAdapter(this, tweets);
-        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
-        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                isPagination = false;
-                maxIdVal = 0;
-                populateTimeline();
-            }
-        });
-        lvTweets.setAdapter(atweets);
-        lvTweets.setOnScrollListener(new EndlessScrollListener(4) {
-            @Override
-            public void onLoadMore(int page, int totalItemsCount) {
-                isPagination = true;
-                populateTimeline();
-            }
-        });
-        client = TwitterApp.getRestClient(); // singleton
-        userName = "";
-        userScreenName = "";
-        userImageUrl = "";
-        populateTimeline();
-        getUserDetails();
-        writeTweet = (EditText) findViewById(R.id.etTweet);
-        writeTweet.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                //Toast.makeText(getBaseContext(), "Hi", Toast.LENGTH_SHORT).show();
-                Intent i = new Intent(getBaseContext(), CreateTweet.class);
-                i.putExtra("userName", userName);
-                i.putExtra("screenName", userScreenName);
-                i.putExtra("imageUrl", userImageUrl);
-                startActivityForResult(i, 10);
-            }
-        });
-    }
+        //setTitle("");
+        // To display logo
+        //getSupportActionBar().setDisplayShowHomeEnabled(true);
+        //getSupportActionBar().setLogo(R.drawable.ic_twitter);
+        //getSupportActionBar().setDisplayUseLogoEnabled(true);
 
-    //Calls the Rest Api
-    //Show the listView
-    private void populateTimeline() {
-        client.getHomeTimeline(new JsonHttpResponseHandler(){
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
-                // DESERIALIZE JSON
-                // CREATE MODELS
-                // LOAD MODELS DATA INTO LIST VIEW
-                ArrayList<Tweet> tweets = Tweet.fromJSONArray(response);
-                maxIdVal = Tweet.getLargestTweetId(tweets);
-                if(!isPagination) {
-                    if(!atweets.isEmpty()) {
-                        atweets.clear();
-                    }
-                }
-                atweets.addAll(tweets);
-                atweets.notifyDataSetChanged();
-                swipeContainer.setRefreshing(false);
-            }
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        progress_bar = (ProgressBar) findViewById(R.id.progress_bar);
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                throwable.printStackTrace();
-            }
-        }, isPagination, maxIdVal);
+        getSupportActionBar().setTitle("");
+        // To display logo
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setLogo(R.drawable.ic_twitter);
+        getSupportActionBar().setDisplayUseLogoEnabled(true);
 
-    }
-
-    // Calls the Rest Api
-    // Get the users information
-    private void getUserDetails() {
-        client.getUserDetails(new JsonHttpResponseHandler(){
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                //Deserialize the response
-                //Get the information needed
-                try {
-                    userName = response.getString("name");
-                    userScreenName = response.getString("screen_name");
-                    userImageUrl = response.getString("profile_image_url");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        tpAdapter = new TweetPageAdapter(getSupportFragmentManager());
+        vpPager = (ViewPager) findViewById(R.id.viewpager);
+        vpPager.setAdapter(tpAdapter);
+        tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
+        tabs.setTextColor(getResources().getColor(R.color.twitter_color));
+        tabs.setViewPager(vpPager);
+        client = TwitterApp.getRestClient();
     }
 
     @Override
@@ -146,18 +87,155 @@ public class TimelineActivity extends ActionBarActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == 10) {
-            if(resultCode == RESULT_OK) {
-                isPagination = false;
-                maxIdVal = 0;
-                populateTimeline();
+    public class TweetPageAdapter extends FragmentPagerAdapter {
+        private String tabTitles[] = {"Home", "Mentions"};
+
+        public TweetPageAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            if(position == 0) {
+                return new HomeTimeLineFragment();
+            } else if(position == 1) {
+                return new MentionTimeLineFragment();
+            } else {
+                return null;
             }
         }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return tabTitles[position];
+        }
+
+        @Override
+        public int getCount() {
+            return tabTitles.length;
+        }
     }
+
+    public void onProfileView(MenuItem mi) {
+        // Launch the profile view
+        client.getUserDetails(new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                //Deserialize the response
+                //Get the information needed
+                try {
+                    screenName = response.getString("screen_name");
+                    imageUrl = response.getString("profile_image_url");
+                    followers = response.getInt("followers_count");
+                    following = response.getInt("friends_count");
+                    tag = response.getString("description");
+                    Intent i = new Intent(getBaseContext(), ProfileActivity.class);
+                    i.putExtra("screenName", screenName);
+                    i.putExtra("imageUrl", imageUrl);
+                    i.putExtra("followers", followers);
+                    i.putExtra("following", following);
+                    i.putExtra("tag", tag);
+                    startActivity(i);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Log.i("INFO", String.valueOf(statusCode) + " " + responseString + "user information fetch failed");
+            }
+        });
+
+    }
+
+    public void onCreateTweet(MenuItem mi) {
+
+        client.getUserDetails(new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                replyTweet(-1, "");
+                /*//Deserialize the response
+                //Get the information needed
+                try {
+                    FragmentManager fm = getSupportFragmentManager();
+                    String userName = response.getString("name");
+                    String userScreenName = response.getString("screen_name");
+                    String userImageUrl = response.getString("profile_image_url");
+                    createTweetDialog tweetDialog = createTweetDialog.newInstance(userName, userScreenName, userImageUrl);
+                    tweetDialog.show(fm, "new_tweet");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }*/
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Log.i("INFO","user information fetch failed");
+            }
+        });
+    }
+
+    public void refreshHomeTimeline() {
+        HomeTimeLineFragment homeTimeline = (HomeTimeLineFragment) getSupportFragmentManager().findFragmentByTag(makeFragmentName(0));
+        homeTimeline.refreshTimeline();
+        MentionTimeLineFragment mentionTimeLine = (MentionTimeLineFragment) getSupportFragmentManager().findFragmentByTag(makeFragmentName(1));
+        mentionTimeLine.refreshTimeline();
+    }
+
+    private String makeFragmentName( int index)
+    {
+        return "android:switcher:" + vpPager.getId() + ":" + index;
+    }
+
+    // Should be called manually when an async task has started
+    //@Override
+    public void showProgressBar() {
+        progress_bar.setVisibility(View.VISIBLE);
+    }
+
+    // Should be called when an async task has finished
+    //@Override
+    public void hideProgressBar() {
+        progress_bar.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void replyTweet(final long tweetId, final String originUser) {
+        this.tweetId = tweetId;
+        this.originUser = originUser;
+        client.getUserDetails(new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                //Deserialize the response
+                //Get the information needed
+                try {
+                    //FragmentManager fm = getSupportFragmentManager();
+                    String userName = response.getString("name");
+                    String userScreenName = response.getString("screen_name");
+                    String userImageUrl = response.getString("profile_image_url");
+                    createDialog(userName, userScreenName, userImageUrl);
+                    //createTweetDialog tweetDialog = createTweetDialog.newInstance(userName, userScreenName, userImageUrl, tweetId, originUser);
+                    //tweetDialog.show(fm, "new_tweet");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Log.i("INFO","user information fetch failed");
+            }
+        });
+    }
+
+    public void createDialog(String userName, String userScreenName, String userImageUrl) {
+        FragmentManager fm = getSupportFragmentManager();
+        createTweetDialog tweetDialog = createTweetDialog.newInstance(userName, userScreenName, userImageUrl, tweetId, originUser);
+        tweetDialog.show(fm, "new_tweet");
+    }
+
 }
